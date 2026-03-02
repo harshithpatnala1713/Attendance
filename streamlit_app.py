@@ -2,9 +2,9 @@ import streamlit as st
 import pandas as pd
 from datetime import date
 
-st.title("📚 Attendance Planner (Auto Timetable)")
+st.title("📚 Flexible Attendance Planner")
 
-# ===== WEEKLY TIMETABLE =====
+# ===== REGULAR TIMETABLE =====
 timetable = {
     "Monday": ["NLP", "SE", "CIP", "DL"],
     "Tuesday": ["ML", "SE Lab"],
@@ -20,15 +20,14 @@ if "data" not in st.session_state:
     )
 
 # ===== SELECT DATE =====
-st.subheader("📅 Mark Attendance")
-
-selected_date = st.date_input("Select Date", date.today())
+st.subheader("📅 Select Date")
+selected_date = st.date_input("Date", date.today())
 day_name = selected_date.strftime("%A")
 
-# ===== SHOW SUBJECTS =====
-if day_name in timetable:
+# ===== REGULAR CLASSES =====
+st.subheader("📖 Regular Classes")
 
-    st.write("### Subjects on", day_name)
+if day_name in timetable:
 
     for subject in timetable[day_name]:
 
@@ -53,7 +52,37 @@ if day_name in timetable:
             st.success(f"{subject} saved!")
 
 else:
-    st.info("No classes today 🎉")
+    st.info("No regular classes today")
+
+# ===== EXTRA CLASS SECTION =====
+st.subheader("➕ Add Extra Class (Weekend / Special)")
+
+extra_subject = st.text_input("Subject name")
+
+extra_status = st.selectbox(
+    "Status",
+    ["Present", "Absent", "Cancelled"],
+    key="extra_status"
+)
+
+if st.button("Add Extra Class"):
+
+    if extra_subject != "":
+
+        new_row = pd.DataFrame(
+            [[selected_date, extra_subject, extra_status]],
+            columns=["Date", "Subject", "Status"]
+        )
+
+        st.session_state.data = pd.concat(
+            [st.session_state.data, new_row],
+            ignore_index=True
+        )
+
+        st.success("Extra class added!")
+
+    else:
+        st.warning("Enter subject name")
 
 # ===== RECORDS =====
 st.subheader("📋 Attendance Records")
