@@ -2,70 +2,44 @@ import streamlit as st
 import pandas as pd
 from datetime import date
 
-st.title("📚 Attendance Planner & Stipend Calculator")
+st.title("📚 Attendance Planner (Auto Timetable)")
 
-subjects = [
-    "CIP", "NLP", "SE", "ML",
-    "DL", "Comm", "SE Lab", "ML Lab"
-]
+# ---------- WEEKLY TIMETABLE ----------
+timetable = {
+    "Monday": ["NLP", "SE", "CIP", "DL"],
+    "Tuesday": ["ML", "SE Lab"],
+    "Wednesday": ["NLP", "DL", "IT Lab"],
+    "Thursday": ["SE", "CIP", "Comm Skills"],
+    "Friday": ["ML", "Comm Skills"]
+}
 
+# ---------- STORAGE ----------
 if "data" not in st.session_state:
     st.session_state.data = pd.DataFrame(
         columns=["Date", "Subject", "Status"]
     )
 
-st.subheader("➕ Add Class Entry")
+# ---------- SELECT DATE ----------
+st.subheader("📅 Mark Attendance")
 
-col1, col2, col3 = st.columns(3)
+selected_date = st.date_input("Select Date", date.today())
 
-with col1:
-    entry_date = st.date_input("Date", date.today())
+day_name = selected_date.strftime("%A")
 
-with col2:
-    subject = st.selectbox("Subject", subjects)
+if day_name in timetable:
+    today_subjects = timetable[day_name]
 
-with col3:
-    status = st.selectbox(
-        "Status",
-        ["Present", "Absent", "Cancelled"]
-    )
+    st.write(f"### Subjects on {day_name}")
 
-if st.button("Add Entry"):
-    new_row = pd.DataFrame(
-        [[entry_date, subject, status]],
-        columns=["Date", "Subject", "Status"]
-    )
+    for subject in today_subjects:
+        status = st.selectbox(
+            f"{subject}",
+            ["Present", "Absent", "Cancelled"],
+            key=f"{selected_date}-{subject}"
+        )
 
-    st.session_state.data = pd.concat(
-        [st.session_state.data, new_row],
-        ignore_index=True
-    )
+        if st.button(f"Save {subject}", key=f"btn-{subject}"):
 
-st.subheader("📋 Records")
-st.dataframe(st.session_state.data)
-
-st.subheader("📊 Attendance Summary")
-
-df = st.session_state.data
-valid = df[df["Status"] != "Cancelled"]
-
-total = len(valid)
-present = len(valid[valid["Status"] == "Present"])
-
-percentage = 0
-if total > 0:
-    percentage = (present / total) * 100
-
-st.metric("Attendance %", f"{percentage:.2f}%")
-
-if percentage >= 75:
-    st.success("🎉 Eligible for FULL stipend")
-elif percentage >= 70:
-    st.warning("⚠ Eligible with Medical Certificate")
-else:
-    st.error("❌ Not Eligible")
-
-if st.button("Reset Data"):
-    st.session_state.data = pd.DataFrame(
-        columns=["Date", "Subject", "Status"]
-    )
+            new_row = pd.DataFrame(
+                [[selected_date, subject, status]],
+                columns=["Date
